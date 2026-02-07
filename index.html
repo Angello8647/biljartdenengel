@@ -3934,19 +3934,20 @@ function fixEncoding(text) {
 	        return speeldagen;
 	    }
 	    
-	    function excelDatumNaarDatum(excelDatum) {
-		    // Directe conversie zonder tijdzone problemen
+	    function excelDatumNaarDatumUTC(excelDatum) {
 		    const dagen = parseInt(excelDatum);
 		    
-		    // Start: 30 december 1899 (dag 0 in Excel systeem)
-		    const basisDatum = new Date(1899, 11, 30);
+		    // Gebruik UTC om tijdzone problemen te vermijden
+		    const basisDatum = Date.UTC(1899, 11, 30);
+		    let ms;
 		    
-		    // Voor datums na 28 februari 1900: corrigeer voor Excel bug
 		    if (dagen > 59) {
-		        return new Date(basisDatum.getTime() + (dagen - 1) * 24 * 60 * 60 * 1000);
+		        ms = basisDatum + (dagen - 1) * 24 * 60 * 60 * 1000;
+		    } else {
+		        ms = basisDatum + dagen * 24 * 60 * 60 * 1000;
 		    }
 		    
-		    return new Date(basisDatum.getTime() + dagen * 24 * 60 * 60 * 1000);
+		    return new Date(ms);
 		}
 
             // ==================== LAAD SPELERS VAN GITHUB ====================
@@ -5767,5 +5768,6 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
 
 </body>
 </html>
+
 
 
