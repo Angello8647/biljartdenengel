@@ -2266,6 +2266,100 @@
     }
 }
 
+/* ========== NIEUWE STIJLEN VOOR SPEELDAGEN BEHEER ========== */
+.speeldagen-management-container {
+    padding: 20px;
+}
+
+.speeldagen-form-container {
+    background: #34495e;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+    border-left: 4px solid #e67e22;
+}
+
+.speeldagen-form-container h3 {
+    color: #e67e22;
+    margin-bottom: 20px;
+}
+
+.speeldagen-list-container {
+    background: #34495e;
+    border-radius: 10px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.speeldagen-list-header {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr auto;
+    gap: 15px;
+    padding: 15px;
+    background: #2c3e50;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-weight: bold;
+    color: #e67e22;
+}
+
+.speeldag-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr auto;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.speeldag-row:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.speeldag-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.empty-speeldagen-message {
+    text-align: center;
+    padding: 40px;
+    color: #7f8c8d;
+    font-size: 1.1em;
+}
+
+.date-full-format {
+    font-weight: bold;
+    color: #ecf0f1;
+}
+
+.speeldag-volgnummer {
+    background: #e67e22;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    display: inline-block;
+    min-width: 30px;
+    text-align: center;
+}
+
+/* ========== SPEELDAGEN TABBLAD ========== */
+.tab-btn.speeldagen {
+    background: #2c3e50;
+}
+
+.tab-btn.speeldagen.active {
+    background: #e67e22;
+}
+
+.tab-btn.speeldagen:hover {
+    background: #d35400;
+}
+
     </style>
 </head>
 <body id="bodyElement">
@@ -2536,6 +2630,11 @@
                     👥 Spelers Beheer
                     <span class="badge" id="badgePlayers">0</span>
                 </button>
+                <!-- NIEUW: Speeldagen tabblad -->
+                <button class="tab-btn speeldagen" onclick="showMatchesTab('speeldagen')" id="tabSpeeldagen">
+                    📅 Speeldagen Beheer
+                    <span class="badge" id="badgeSpeeldagen">0</span>
+                </button>
             </div>
             
             <div id="matchesTabContent">
@@ -2552,6 +2651,12 @@
                 <div class="tab-content" id="tabContentPlayers">
                     <div class="players-management-container">
                         <!-- Hier komt de volledige spelersbeheer interface -->
+                    </div>
+                </div>
+                <!-- NIEUW: Speeldagen beheer tab -->
+                <div class="tab-content" id="tabContentSpeeldagen">
+                    <div class="speeldagen-management-container">
+                        <!-- Hier komt de speeldagen beheer interface -->
                     </div>
                 </div>
             </div>
@@ -2745,6 +2850,25 @@
 
             function formatDateForCSV(dateStr) {
                 return formatDateDisplay(dateStr);
+            }
+
+            // NIEUWE FUNCTIE: Formatteer datum volledig zoals "zaterdag 7 februari 2026"
+            function formatDateFull(dateStr) {
+                if (!dateStr) return '';
+                
+                const date = new Date(dateStr);
+                if (isNaN(date.getTime())) return dateStr;
+                
+                const dagen = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
+                const maanden = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 
+                                 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+                
+                const dagNaam = dagen[date.getDay()];
+                const dag = date.getDate();
+                const maand = maanden[date.getMonth()];
+                const jaar = date.getFullYear();
+                
+                return `${dagNaam} ${dag} ${maand} ${jaar}`;
             }
 
             // NIEUWE FUNCTIES VOOR SCORE BUTTONS
@@ -3757,7 +3881,7 @@ function fixEncoding(text) {
     const replacements = {
         'Ã©': 'é', 'Ã¨': 'è', 'Ãª': 'ê', 'Ã«': 'ë',
         'Ã': 'à', 'Ã¢': 'â', 'Ã¤': 'ä', 'Ã¥': 'å',
-        'Ã§': 'ç', 'Ã¯': 'ï', 'Ã®': 'î', 'Ã´': 'ô',
+        'Ãç': 'ç', 'Ã¯': 'ï', 'Ã®': 'î', 'Ã´': 'ô',
         'Ã¶': 'ö', 'Ã¹': 'ù', 'Ã»': 'û', 'Ã¼': 'ü',
         'Ã±': 'ñ', 'â‚¬': '€', 'Ã': 'Â'
     };
@@ -3797,7 +3921,8 @@ function fixEncoding(text) {
 	                        volgnummer: parseInt(volgnummer),
 	                        excelDatum: parseInt(excelDatum),
 	                        jsDatum: jsDatum,
-	                        displayDatum: formatDateForInput(jsDatum)
+	                        displayDatum: formatDateForInput(jsDatum),
+                            fullDate: formatDateFull(formatDateForInput(jsDatum))
 	                    });
 	                }
 	            }
@@ -3897,6 +4022,8 @@ function fixEncoding(text) {
                 
                 if (tab === 'players') {
                     loadPlayersManagementTab();
+                } else if (tab === 'speeldagen') {
+                    loadSpeeldagenManagementTab();
                 } else {
                     loadMatchesTabContent();
                 }
@@ -4562,7 +4689,7 @@ window.importSpeeldagenCSV = function() {
                 // Toon voorbeeld
                 let voorbeeld = "Speeldagen die worden geïmporteerd:\n\n";
                 speeldagen.slice(0, 5).forEach(dag => {
-                    voorbeeld += `Speeldag ${dag.volgnummer}: ${dag.displayDatum}\n`;
+                    voorbeeld += `Speeldag ${dag.volgnummer}: ${dag.fullDate}\n`;
                 });
                 if (speeldagen.length > 5) {
                     voorbeeld += `... en ${speeldagen.length - 5} meer\n`;
@@ -4588,9 +4715,12 @@ window.importSpeeldagenCSV = function() {
                 }
                 
                 // Refresh UI
-                if (state.currentMatchesTab === 'players') {
-                    loadPlayersManagementTab();
+                if (state.currentMatchesTab === 'speeldagen') {
+                    loadSpeeldagenManagementTab();
                 }
+                
+                // Update badge
+                updateSpeeldagenBadge();
                 
                 // Toon bevestiging
                 let message = `✅ ${speeldagen.length} speeldagen geïmporteerd!`;
@@ -4638,7 +4768,8 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
                     volgnummer: parseInt(volgnummer),
                     excelDatum: parseInt(excelDatum),
                     jsDatum: jsDatum,
-                    displayDatum: formatDateForInput(jsDatum)
+                    displayDatum: formatDateForInput(jsDatum),
+                    fullDate: formatDateFull(formatDateForInput(jsDatum))
                 });
                 
                 console.log(`📅 Speeldag geparsed: ${volgnummer} -> ${jsDatum}`);
@@ -4807,6 +4938,282 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
                 }
             }
 
+            // ==================== NIEUWE FUNCTIES VOOR SPEELDAGEN BEHEER ====================
+            function loadSpeeldagenManagementTab() {
+                const container = document.getElementById('tabContentSpeeldagen');
+                
+                updateSpeeldagenBadge();
+                
+                // Zorg dat speeldagen geladen zijn
+                if (!state.speeldagen || state.speeldagen.length === 0) {
+                    console.log("⚠️ Geen speeldagen gevonden in state, probeer te laden...");
+                    const savedSpeeldagen = localStorage.getItem('biljartSpeeldagen');
+                    if (savedSpeeldagen) {
+                        try {
+                            state.speeldagen = JSON.parse(savedSpeeldagen);
+                            console.log(`✅ ${state.speeldagen.length} speeldagen geladen uit localStorage`);
+                        } catch (e) {
+                            console.error("❌ Fout bij laden speeldagen:", e);
+                            state.speeldagen = [];
+                        }
+                    }
+                }
+                
+                const totalSpeeldagen = state.speeldagen.length;
+                
+                container.innerHTML = `
+                    <div class="speeldagen-management-container">
+                        <!-- Import sectie -->
+                        <div style="background: #2c3e50; border-left: 4px solid #e67e22; padding: 15px; margin-bottom: 20px; border-radius: 8px;">
+                            <h4>📅 Importeer Speeldagen</h4>
+                            <p style="color: #bdc3c7; font-size: 0.9em; margin: 5px 0;">
+                                Importeer speeldagen vanuit een CSV bestand met kolommen: VolgnummerSpeeldag;ExcelDatum
+                            </p>
+                            <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
+                                <button onclick="importSpeeldagenCSV()" 
+                                        style="background: #e67e22; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                                    📂 Importeer CSV
+                                </button>
+                                <button onclick="exportSpeeldagenToCSV()" 
+                                        style="background: #3498db; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer;">
+                                    💾 Exporteer CSV
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulier voor nieuwe speeldag -->
+                        <div class="speeldagen-form-container">
+                            <h3>➕ Nieuwe Speeldag Toevoegen</h3>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Volgnummer *</label>
+                                    <input type="number" id="speeldagVolgnummer" class="form-input" 
+                                           placeholder="bijv. 1" min="1" max="100"
+                                           value="${state.speeldagen.length > 0 ? Math.max(...state.speeldagen.map(s => s.volgnummer)) + 1 : 1}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Datum *</label>
+                                    <input type="date" id="speeldagDatum" class="form-input" 
+                                           value="${formatDateForInput(new Date())}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Excel Datum (optioneel)</label>
+                                    <input type="number" id="speeldagExcelDatum" class="form-input" 
+                                           placeholder="Excel datumnummer">
+                                </div>
+                                <button class="add-player-btn" onclick="addNewSpeeldag()" style="background: #e67e22;">
+                                    ➕ Toevoegen
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Statistieken overzicht -->
+                        <div class="stats-summary">
+                            <div class="stats-item">
+                                <div>Totaal speeldagen</div>
+                                <div class="stats-value">${totalSpeeldagen}</div>
+                            </div>
+                            <div class="stats-item">
+                                <div>Eerste speeldag</div>
+                                <div class="stats-value">${totalSpeeldagen > 0 ? state.speeldagen[0].displayDatum : 'N/A'}</div>
+                            </div>
+                            <div class="stats-item">
+                                <div>Laatste speeldag</div>
+                                <div class="stats-value">${totalSpeeldagen > 0 ? state.speeldagen[state.speeldagen.length - 1].displayDatum : 'N/A'}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- SPEELDAGENLIJST -->
+                        <div class="speeldagen-list-container">
+                            <h3 style="margin-bottom: 20px;">📋 Alle Speeldagen (${totalSpeeldagen})</h3>
+                            
+                            <!-- Bulk acties -->
+                            <div style="margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                                <button class="bulk-action-btn" onclick="clearAllSpeeldagen()" style="background: #e74c3c;">
+                                    🗑️ Alle Speeldagen Verwijderen
+                                </button>
+                            </div>
+                            
+                            <!-- HEADER -->
+                            <div class="speeldagen-list-header">
+                                <div>Volgnr</div>
+                                <div>Datum</div>
+                                <div>Excel Datum</div>
+                                <div>Acties</div>
+                            </div>
+                            
+                            <!-- SPEELDAGEN CONTENT -->
+                            <div id="speeldagenListContent">
+                                ${totalSpeeldagen === 0 ? 
+                                    '<div class="empty-speeldagen-message">Geen speeldagen gevonden. Voeg speeldagen toe via het formulier of importeer een CSV.</div>' : 
+                                    ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (totalSpeeldagen > 0) {
+                    renderSpeeldagenList();
+                }
+            }
+
+            function renderSpeeldagenList() {
+                const container = document.getElementById('speeldagenListContent');
+                if (!container) return;
+                
+                // Sorteer op volgnummer
+                const sortedSpeeldagen = [...state.speeldagen].sort((a, b) => a.volgnummer - b.volgnummer);
+                
+                // Bouw de speeldagenlijst op
+                container.innerHTML = sortedSpeeldagen.map((speeldag, index) => {
+                    return `
+                        <div class="speeldag-row" id="speeldagRow_${index}">
+                            <div>
+                                <span class="speeldag-volgnummer">${speeldag.volgnummer}</span>
+                            </div>
+                            <div>
+                                <div class="date-full-format">${speeldag.fullDate || formatDateFull(speeldag.displayDatum)}</div>
+                                <div style="font-size: 0.8em; color: #95a5a6;">${speeldag.displayDatum}</div>
+                            </div>
+                            <div>
+                                ${speeldag.excelDatum || '-'}
+                            </div>
+                            <div class="speeldag-actions">
+                                <button class="delete-btn" onclick="deleteSpeeldag(${index})">🗑️ Verwijder</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            window.addNewSpeeldag = function() {
+                const volgnummerInput = document.getElementById('speeldagVolgnummer');
+                const datumInput = document.getElementById('speeldagDatum');
+                const excelDatumInput = document.getElementById('speeldagExcelDatum');
+                
+                const volgnummer = parseInt(volgnummerInput.value) || 0;
+                const datum = datumInput.value;
+                const excelDatum = parseInt(excelDatumInput.value) || null;
+                
+                if (!volgnummer || volgnummer < 1) {
+                    alert('Voer een geldig volgnummer in (minimaal 1)');
+                    volgnummerInput.focus();
+                    return;
+                }
+                
+                if (!datum) {
+                    alert('Selecteer een datum');
+                    datumInput.focus();
+                    return;
+                }
+                
+                // Check voor dubbele volgnummer
+                const existingSpeeldag = state.speeldagen.find(s => s.volgnummer === volgnummer);
+                
+                if (existingSpeeldag) {
+                    if (!confirm(`Speeldag met volgnummer ${volgnummer} bestaat al. Toch toevoegen?`)) {
+                        return;
+                    }
+                }
+                
+                // Add speeldag
+                const newSpeeldag = {
+                    volgnummer: volgnummer,
+                    jsDatum: new Date(datum),
+                    displayDatum: datum,
+                    fullDate: formatDateFull(datum),
+                    excelDatum: excelDatum
+                };
+                
+                state.speeldagen.push(newSpeeldag);
+                
+                // Save to storage
+                localStorage.setItem('biljartSpeeldagen', JSON.stringify(state.speeldagen));
+                
+                // Clear form
+                volgnummerInput.value = state.speeldagen.length > 0 ? Math.max(...state.speeldagen.map(s => s.volgnummer)) + 1 : 1;
+                datumInput.value = formatDateForInput(new Date());
+                excelDatumInput.value = '';
+                
+                // Refresh display
+                renderSpeeldagenList();
+                updateSpeeldagenBadge();
+                
+                alert(`✅ Speeldag ${volgnummer} toegevoegd: ${formatDateFull(datum)}`);
+                volgnummerInput.focus();
+            }
+
+            window.deleteSpeeldag = function(index) {
+                if (index < 0 || index >= state.speeldagen.length) return;
+                
+                const speeldag = state.speeldagen[index];
+                
+                if (!confirm(`Weet je zeker dat je speeldag ${speeldag.volgnummer} (${speeldag.fullDate}) wilt verwijderen?\n\nDit kan niet ongedaan gemaakt worden.`)) {
+                    return;
+                }
+                
+                // Remove speeldag
+                state.speeldagen.splice(index, 1);
+                
+                // Save to storage
+                localStorage.setItem('biljartSpeeldagen', JSON.stringify(state.speeldagen));
+                
+                // Refresh display
+                if (state.currentMatchesTab === 'speeldagen') {
+                    renderSpeeldagenList();
+                    updateSpeeldagenBadge();
+                }
+                
+                alert(`✅ Speeldag ${speeldag.volgnummer} verwijderd!`);
+            }
+
+            window.clearAllSpeeldagen = function() {
+                if (state.speeldagen.length === 0) {
+                    alert("Geen speeldagen om te verwijderen.");
+                    return;
+                }
+                
+                if (confirm("Weet je zeker dat je ALLE speeldagen wilt verwijderen? Dit kan niet ongedaan gemaakt worden!")) {
+                    state.speeldagen = [];
+                    localStorage.setItem('biljartSpeeldagen', JSON.stringify([]));
+                    loadSpeeldagenManagementTab();
+                }
+            }
+
+            window.exportSpeeldagenToCSV = function() {
+                if (state.speeldagen.length === 0) {
+                    alert('Geen speeldagen om te exporteren.');
+                    return;
+                }
+                
+                let csvContent = "VolgnummerSpeeldag;ExcelDatum;VolledigeDatum\n";
+                
+                // Sorteer op volgnummer
+                const sortedSpeeldagen = [...state.speeldagen].sort((a, b) => a.volgnummer - b.volgnummer);
+                
+                sortedSpeeldagen.forEach(speeldag => {
+                    csvContent += `${speeldag.volgnummer};${speeldag.excelDatum || ''};"${speeldag.fullDate}"\n`;
+                });
+                
+                const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.setAttribute("href", url);
+                link.setAttribute("download", `biljart_speeldagen_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert(`✅ ${state.speeldagen.length} speeldagen geëxporteerd naar CSV!`);
+            }
+
+            function updateSpeeldagenBadge() {
+                const badge = document.getElementById('badgeSpeeldagen');
+                if (badge) {
+                    badge.textContent = state.speeldagen.length;
+                }
+            }
+
             // ==================== MATCHES TAB FUNCTIES ====================
             function loadMatchesTabContent() {
                 updateTabBadges();
@@ -4819,6 +5226,8 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
                     loadDownloadedMatches();
                 } else if (state.currentMatchesTab === 'players') {
                     loadPlayersManagementTab();
+                } else if (state.currentMatchesTab === 'speeldagen') {
+                    loadSpeeldagenManagementTab();
                 }
             }
 
@@ -4827,11 +5236,13 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
                 const completedCount = state.matches.filter(m => m.completed).length;
                 const downloadedCount = state.downloadedMatches.length;
                 const playersCount = state.players.length;
+                const speeldagenCount = state.speeldagen.length;
                 
                 document.getElementById('badgeActive').textContent = activeCount;
                 document.getElementById('badgeCompleted').textContent = completedCount;
                 document.getElementById('badgeDownloaded').textContent = downloadedCount;
                 document.getElementById('badgePlayers').textContent = playersCount;
+                document.getElementById('badgeSpeeldagen').textContent = speeldagenCount;
             }
 
             function loadActiveMatches() {
@@ -5268,7 +5679,8 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
                 const stateToSave = {
                     players: state.players,
                     matches: state.matches,
-                    downloadedMatches: state.downloadedMatches
+                    downloadedMatches: state.downloadedMatches,
+                    speeldagen: state.speeldagen
                 };
                 localStorage.setItem('billiardState', JSON.stringify(stateToSave));
             }
@@ -5281,6 +5693,7 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
                         state.players = parsed.players || [];
                         state.matches = parsed.matches || [];
                         state.downloadedMatches = parsed.downloadedMatches || [];
+                        state.speeldagen = parsed.speeldagen || [];
                     } catch (e) {
                         console.error('Fout bij laden opgeslagen staat:', e);
                     }
@@ -5352,5 +5765,3 @@ function parseSpeeldagenCSVMetKopteksten(csvText) {
 
 </body>
 </html>
-
-
