@@ -75,27 +75,51 @@ function berekenExactMacroKlassement() {
     const players = getPlayers();
     const matches = getMatches();
     
-    if (matches.length === 0) {
-        return { speeldagen: [], spelersKlassement: [] };
+    // Haal speeldagen uit state (geïmporteerd via CSV)
+    let speeldagenData = [];
+    const savedState = localStorage.getItem('billiardState');
+    if (savedState) {
+        try {
+            const state = JSON.parse(savedState);
+            if (state.speeldagen && Array.isArray(state.speeldagen)) {
+                speeldagenData = state.speeldagen;
+            }
+        } catch (e) {
+            console.error('Fout bij laden speeldagen uit state:', e);
+        }
     }
     
-    // Bepaal unieke speeldagen
-    const alleDatums = matches.map(m => m.date);
-    const uniekeDatums = [...new Set(alleDatums)].sort((a, b) => new Date(a) - new Date(b));
+    // Als er GEEN speeldagen geïmporteerd zijn, fallback naar bestaande logica
+    if (speeldagenData.length === 0) {
+        if (matches.length === 0) {
+            return { speeldagen: [], spelersKlassement: [] };
+        }
+        const alleDatums = matches.map(m => m.date);
+        const uniekeDatums = [...new Set(alleDatums)].sort((a, b) => new Date(a) - new Date(b));
+        speeldagenData = uniekeDatums.map((datum, index) => ({
+            datum: datum,
+            speeldagNummer: index + 1,
+            jsDatum: new Date(datum),
+            displayDatum: datum
+        }));
+    }
     
-    const speeldagen = uniekeDatums.map((datum, index) => {
-        const d = new Date(datum);
+    // Formatteer naar het formaat dat de rest van de code verwacht
+    const speeldagen = speeldagenData.map((item, index) => {
+        const d = new Date(item.jsDatum || item.datum);
         const dag = d.getDate();
         const maanden = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 
                         'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
         const maand = maanden[d.getMonth()];
-        
         return {
-            datum: datum,
-            speeldagNummer: index + 1,
+            datum: item.displayDatum || item.datum,
+            speeldagNummer: item.volgnummer || (index + 1),
             datumShort: `${dag}-${maand}`
         };
     });
+    
+    // Sorteer op datum (voor het geval de CSV niet gesorteerd is)
+    speeldagen.sort((a, b) => new Date(a.datum) - new Date(b.datum));
     
     // Bereken matchpunten per speler per speeldag
     const spelersMetPunten = players.filter(p => p.name).map(player => {
